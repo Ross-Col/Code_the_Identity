@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Orange Belt - Sprint 2 - Lesson 5 Lab | Code the Identity</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <img src="https://drive.google.com/thumbnail?id=1KfcQy_J5Ew3Y-ssZkNXO6bv79XAKigsF&sz=w2000" alt="iCode logo">
+      <div class="brand-copy">
+        <strong>Orange Belt · Sprint 2 · Lesson 5 Lab</strong>
+        <span>Code the Identity</span>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <div class="dark-mode-control">
+        <span>Dark Mode</span>
+        <button class="dark-toggle" id="darkModeToggle" type="button" aria-pressed="false" aria-label="Toggle dark mode">
+          <span class="dark-toggle-knob"></span>
+          <span class="dark-toggle-state" id="darkModeState">Off</span>
+        </button>
+      </div>
+      <button class="howto-btn" id="howToBtn" type="button">How to Play</button>
+      <div class="lab-pill">Web Developer Challenge</div>
+    </div>
+  </div>
+
+  <main class="shell">
+    <section class="intro" id="introScreen">
+      <div class="intro-hero">
+        <div class="eyebrow">Your Mission</div>
+        <h1>Code the <span>Identity</span></h1>
+        <p>
+          Three companies have already decided who they are, and another developer already finished about 60% of each website.
+          Choose a client, study its Identity Board, then use real HTML and CSS to finish the final 40%.
+        </p>
+        <div class="mission-strip">
+          <div class="mission-icon">💻</div>
+          <div>
+            <strong>This is a coding lab, not a drag-and-drop activity.</strong>
+            <span>The website preview responds to the code you type. Finish the five jobs left by the previous developer. Incorrect HTML or CSS will be ignored or rendered differently, just like a real live preview.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="client-grid">
+        <article class="client-card">
+          <img src="https://drive.google.com/thumbnail?id=181XeKHIrBSCtz-Nk1-Eg5fOmxOavbQt-&sz=w2000" alt="Bakery client preview">
+          <div class="client-card-body">
+            <span class="type">Bakery Client</span>
+            <h2>Whisk & Willow Bakery</h2>
+            <p>A warm neighborhood bakery that wants customers to feel welcomed, comfortable, and excited about handmade treats.</p>
+            <button class="choose-btn" data-client="bakery" type="button">Choose This Client</button>
+          </div>
+        </article>
+
+        <article class="client-card">
+          <img src="https://drive.google.com/thumbnail?id=1utI800p8vXzKnRhkdvmngXqUuvWN4qUN&sz=w2000" alt="Technology client preview">
+          <div class="client-card-body">
+            <span class="type">Technology Client</span>
+            <h2>NovaByte Labs</h2>
+            <p>A modern technology company that builds simple digital tools for small businesses and wants to feel smart, clean, and dependable.</p>
+            <button class="choose-btn" data-client="tech" type="button">Choose This Client</button>
+          </div>
+        </article>
+
+        <article class="client-card">
+          <img src="https://drive.google.com/thumbnail?id=1d96BAzfBemV2LhO-hvG1WFmuny-XG0HS&sz=w2000" alt="Sports client preview">
+          <div class="client-card-body">
+            <span class="type">Sports Client</span>
+            <h2>PeakPulse Athletics</h2>
+            <p>An energetic sports training company for young athletes that wants to feel bold, focused, competitive, and motivating.</p>
+            <button class="choose-btn" data-client="sports" type="button">Choose This Client</button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="workspace hidden" id="workspace">
+      <div class="workspace-head">
+        <div class="client-now">
+          <div class="client-badge" id="clientIcon">🏢</div>
+          <div>
+            <strong id="clientName">Client</strong>
+            <span id="clientTagline">Tagline</span>
+          </div>
+        </div>
+        <div class="workspace-actions">
+          <button class="action-btn action-board" id="viewBoardBtn" type="button">📋 View Identity Board</button>
+          <button class="action-btn action-resources" id="viewResourcesBtn" type="button">🖼 Header Resources</button>
+          <button class="action-btn action-reset" id="resetBtn" type="button">↺ Reset Client</button>
+          <button class="action-btn action-switch" id="switchBtn" type="button">← Back to Clients</button>
+        </div>
+      </div>
+
+      <div class="progress-card">
+        <div class="progress-top">
+          <div>
+            <strong>Client Project Progress</strong>
+            <span id="progressMessage">The previous developer completed 60%. Finish the final five jobs.</span>
+          </div>
+          <div class="progress-number" id="progressNumber">60%</div>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="job-status-grid" id="jobStatusGrid">
+          <div class="job-status" data-job="1"><span>1</span><div><strong>Header</strong><small>Add the header that best matches the Identity Board</small></div></div>
+          <div class="job-status" data-job="2"><span>2</span><div><strong>Main Heading</strong><small>Add at least 2 valid styles to h1</small></div></div>
+          <div class="job-status" data-job="3"><span>3</span><div><strong>Featured Area</strong><small>Add inline background-color to the featured div</small></div></div>
+          <div class="job-status" data-job="4"><span>4</span><div><strong>Button</strong><small>Add background-color + 1 more style</small></div></div>
+          <div class="job-status" data-job="5"><span>5</span><div><strong>Final Mismatch</strong><small>Add 2 text-focused styles to h2</small></div></div>
+        </div>
+      </div>
+
+      <div class="work-grid"><section class="panel editor-panel">
+          <div class="editor-title">
+            <strong>VS Code · index.html</strong>
+            <div class="editor-title-actions">
+              <span>Type real HTML + CSS</span>
+              <button class="format-code-btn" id="formatCodeBtn" type="button" title="Format Document">Format Code</button>
+            </div>
+          </div>
+          <div class="tabs"><div class="tab">index.html</div></div>
+          <div class="editor-wrap">
+            <pre class="line-numbers" id="lineNumbers">1</pre>
+            <div class="code-stack">
+              <pre class="syntax-layer" id="syntaxLayer" aria-hidden="true"></pre>
+              <textarea class="code-editor" id="codeEditor" spellcheck="false" aria-label="HTML and CSS code editor"></textarea>
+            </div>
+          </div>
+          <div class="editor-status">
+            <span>HTML</span>
+            <span class="hint">Red underline = syntax error · CSS declarations must end with ; · Client feedback waits for complete syntax</span>
+          </div>
+        </section>
+      
+        <section class="panel preview-panel">
+          <div class="panel-head">
+            <strong>Live Website Preview</strong>
+            <div class="live"><span class="live-dot"></span>LIVE PREVIEW</div>
+          </div>
+
+          <div class="browser">
+            <div class="browser-top"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+            <iframe class="preview-frame" id="previewFrame" title="Live student website preview" sandbox="allow-same-origin"></iframe>
+          </div>
+        </section>
+
+        </div>
+    </section>
+  </main>
+</div>
+
+<!-- Identity Board -->
+
+<div class="celebration-layer" id="celebrationLayer" aria-hidden="true"></div>
+
+<div class="modal" id="howToModal" aria-hidden="true">
+  <div class="modal-card howto-card">
+    <div class="modal-head">
+      <strong>How to Play — Finish the Final 40%</strong>
+      <button class="close-btn" id="howToClose" type="button">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="howto-intro">
+        <div class="howto-icon">💻</div>
+        <div>
+          <strong>Use the live preview as your feedback.</strong>
+          <span>If something does not change, check your spelling, punctuation, braces, semicolons, tags, and where you placed the code.</span>
+        </div>
+      </div>
+
+      <div class="howto-jobs">
+        <div class="howto-job"><span>1</span><div><strong>Add a Header Image</strong><small>Create a <code>&lt;div&gt;</code> for the header, then add an <code>&lt;img&gt;</code> using the header that best matches the Company Identity Board.</small></div></div>
+        <div class="howto-job"><span>2</span><div><strong>Finish the Main Heading</strong><small>Add at least <b>2 valid CSS styles</b> to the unfinished <code>h1</code>.</small></div></div>
+        <div class="howto-job"><span>3</span><div><strong>Finish the Featured Content Area</strong><small>Add an inline <code>style="background-color: ...;"</code> to the existing featured-content <code>&lt;div&gt;</code>. This changes only that one container.</small></div></div>
+        <div class="howto-job"><span>4</span><div><strong>Finish the Button</strong><small>Add <code>background-color</code> plus at least <b>1 more valid style</b>.</small></div></div>
+        <div class="howto-job"><span>5</span><div><strong>Fix the Final Visual Mismatch</strong><small>Add at least <b>2 text-focused CSS styles</b> to the unfinished <code>h2</code>: color, size, font, alignment, or boldness.</small></div></div>
+      </div>
+
+      <div class="howto-goal">
+        <strong>Goal:</strong> Complete all five jobs and make your final design choices match the Company's Identity Board. The finished website should feel polished, intentional, and ready for the client.
+      </div>
+
+      <div class="howto-early">
+        <strong>Finished early?</strong> Improve one additional element using only HTML or styling tools you have already learned.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="completionModal" aria-hidden="true">
+  <div class="modal-card completion-card">
+    <button class="modal-close" id="completionClose" type="button" aria-label="Close">×</button>
+    <div class="completion-layout">
+      <img src="https://drive.google.com/thumbnail?id=1YL9nUHFclRaAsof6QGUYYC-9D04O9GyF&sz=w2000" alt="Very happy client">
+      <div>
+        <div class="reaction-kicker">CLIENT PROJECT COMPLETE</div>
+        <h2>100% — Client Approved!</h2>
+        <p>You finished all five coding jobs. You used real HTML and CSS to bring the Company's Identity Board into the website.</p>
+        <strong>You didn't just make it look different. You made design choices with purpose.</strong>
+        <div class="reaction-actions">
+          <button class="reaction-btn primary" id="completionContinue" type="button">View My Finished Site</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal client-reaction-modal" id="reactionModal" aria-hidden="true">
+  <div class="modal-card reaction-card">
+    <button class="modal-close" id="reactionClose" type="button" aria-label="Close">×</button>
+    <div class="reaction-layout">
+      <img id="reactionImage" class="reaction-image" alt="Client reaction">
+      <div class="reaction-copy">
+        <div class="reaction-kicker" id="reactionKicker">CLIENT REACTION</div>
+        <h2 id="reactionTitle">Nice choice!</h2>
+        <p id="reactionMessage"></p>
+        <div class="reaction-actions" id="reactionActions">
+          <button class="reaction-btn primary" id="reactionContinue" type="button">Keep Going</button>
+          <button class="reaction-btn secondary hidden" id="reactionBoard" type="button">Check Identity Board</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="boardModal" aria-hidden="true">
+  <div class="modal-card">
+    <div class="modal-head">
+      <strong id="boardModalTitle">Company Identity Board</strong>
+      <button class="close-btn" data-close="boardModal" type="button">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="identity-board">
+        <div class="ib-title">
+          <h2>Company Identity Board</h2>
+          <span>Use this board as your design guide</span>
+        </div>
+
+        <div class="ib-box ib-brand">
+          <h3>Logo / Company</h3>
+          <div class="ib-logo" id="ibLogo">★</div>
+          <div class="ib-company">
+            <strong id="ibCompany">Company</strong>
+            <span id="ibTagline">Tagline</span>
+          </div>
+        </div>
+
+        <div class="ib-box">
+          <h3>Mission</h3>
+          <p id="ibMission"></p>
+        </div>
+
+        <div class="ib-box">
+          <h3>Customer</h3>
+          <p id="ibCustomer"></p>
+        </div>
+
+        <div class="ib-box">
+          <h3>Problem We Solve</h3>
+          <p id="ibProblem"></p>
+        </div>
+
+        <div class="ib-box">
+          <h3>Color Palette</h3>
+          <div class="swatches" id="ibColors"></div>
+        </div>
+
+        <div class="ib-box">
+          <h3>Company Personality</h3>
+          <div class="tags" id="ibPersonality"></div>
+        </div>
+
+        <div class="ib-box">
+          <h3>Fonts / Style</h3>
+          <div class="font-row" id="ibFonts"></div>
+        </div>
+
+        <div class="ib-box">
+          <h3>Images / Visual Style</h3>
+          <div class="image-notes" id="ibImages"></div>
+        </div>
+
+        <div class="ib-box ib-wide">
+          <h3>Identity Notes</h3>
+          <div class="ib-notes" id="ibNotes"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Header resources -->
+<div class="modal" id="resourcesModal" aria-hidden="true">
+  <div class="modal-card">
+    <div class="modal-head">
+      <strong id="resourcesTitle">Header Resources</strong>
+      <button class="close-btn" data-close="resourcesModal" type="button">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="resource-grid">
+        <div class="resource">
+          <img id="resource1Img" alt="Header option 1">
+          <div class="resource-meta">
+            <strong>Header Option 1</strong>
+            <span class="filename">header1.png</span>
+          </div>
+        </div>
+        <div class="resource">
+          <img id="resource2Img" alt="Header option 2">
+          <div class="resource-meta">
+            <strong>Header Option 2</strong>
+            <span class="filename">header2.png</span>
+          </div>
+        </div>
+        <div class="resource-tip">
+          To use a header, type an image tag in the marked HTML area using <strong>header1.png</strong> or <strong>header2.png</strong>.
+          Compare both header options against the Company Identity Board, then choose the one that best fits the client.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
