@@ -6,7 +6,7 @@
 <title>Orange Belt - Sprint 2 - Lesson 5 Lab | Code the Identity</title>
 <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body class="dark-mode">
 <div class="app">
   <div class="topbar">
     <div class="brand">
@@ -18,13 +18,13 @@
     </div>
     <div class="topbar-actions">
       <div class="dark-mode-control">
-        <span>Dark Mode</span>
-        <button class="dark-toggle" id="darkModeToggle" type="button" aria-pressed="false" aria-label="Toggle dark mode">
+        <span>Appearance</span>
+        <button class="dark-toggle on" id="darkModeToggle" type="button" aria-pressed="true" aria-label="Switch to light mode">
           <span class="dark-toggle-knob"></span>
-          <span class="dark-toggle-state" id="darkModeState">Off</span>
+          <span class="dark-toggle-state" id="darkModeState">Dark</span>
         </button>
       </div>
-      <button class="howto-btn" id="howToBtn" type="button">How to Play</button>
+      <button class="howto-btn" id="howToBtn" type="button">My Coding Tasks</button>
       <div class="lab-pill">Web Developer Challenge</div>
     </div>
   </div>
@@ -90,8 +90,9 @@
           </div>
         </div>
         <div class="workspace-actions">
-          <button class="action-btn action-board" id="viewBoardBtn" type="button">📋 View Identity Board</button>
+          <button class="action-btn action-board" id="viewBoardBtn" type="button">🎨 Identity Board</button>
           <button class="action-btn action-resources" id="viewResourcesBtn" type="button">🖼 Header Resources</button>
+          <button class="action-btn action-feedback" id="feedbackBtn" type="button">💬 Client Feedback <span id="feedbackCount"></span></button>
           <button class="action-btn action-reset" id="resetBtn" type="button">↺ Reset Client</button>
           <button class="action-btn action-switch" id="switchBtn" type="button">← Back to Clients</button>
         </div>
@@ -100,26 +101,20 @@
       <div class="progress-card">
         <div class="progress-top">
           <div>
-            <strong>Client Project Progress</strong>
-            <span id="progressMessage">The previous developer completed 60%. Finish the final five jobs.</span>
+            <strong>Project Progress</strong>
+            <span id="progressMessage">Complete 5 coding tasks to reach 100%.</span>
           </div>
           <div class="progress-number" id="progressNumber">60%</div>
         </div>
         <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-        <div class="job-status-grid" id="jobStatusGrid">
-          <div class="job-status" data-job="1"><span>1</span><div><strong>Header</strong><small>Add the header that best matches the Identity Board</small></div></div>
-          <div class="job-status" data-job="2"><span>2</span><div><strong>Main Heading</strong><small>Add at least 2 valid styles to h1</small></div></div>
-          <div class="job-status" data-job="3"><span>3</span><div><strong>Featured Area</strong><small>Add inline background-color to the featured div</small></div></div>
-          <div class="job-status" data-job="4"><span>4</span><div><strong>Button</strong><small>Add background-color + 1 more style</small></div></div>
-          <div class="job-status" data-job="5"><span>5</span><div><strong>Final Mismatch</strong><small>Add 2 text-focused styles to h2</small></div></div>
-        </div>
+
       </div>
 
       <div class="work-grid"><section class="panel editor-panel">
           <div class="editor-title">
-            <strong>VS Code · index.html</strong>
+            <strong>Your Code · index.html</strong>
             <div class="editor-title-actions">
-              <span>Type real HTML + CSS</span>
+              
               <button class="format-code-btn" id="formatCodeBtn" type="button" title="Format Document">Format Code</button>
             </div>
           </div>
@@ -128,19 +123,19 @@
             <pre class="line-numbers" id="lineNumbers">1</pre>
             <div class="code-stack">
               <pre class="syntax-layer" id="syntaxLayer" aria-hidden="true"></pre>
-              <textarea class="code-editor" id="codeEditor" spellcheck="false" aria-label="HTML and CSS code editor"></textarea>
+              <textarea class="code-editor" id="codeEditor" spellcheck="false" wrap="off" aria-label="HTML and CSS code editor"></textarea>
             </div>
           </div>
           <div class="editor-status">
             <span>HTML</span>
-            <span class="hint">Red underline = syntax error · CSS declarations must end with ; · Client feedback waits for complete syntax</span>
+            <span class="hint">Red underline? Check your code for mistakes.</span>
           </div>
         </section>
       
         <section class="panel preview-panel">
           <div class="panel-head">
-            <strong>Live Website Preview</strong>
-            <div class="live"><span class="live-dot"></span>LIVE PREVIEW</div>
+            <strong>Your Website</strong>
+            
           </div>
 
           <div class="browser">
@@ -154,6 +149,7 @@
   </main>
 </div>
 
+<div id="feedbackToast" class="feedback-toast" role="status" aria-live="polite"></div>
 <!-- Identity Board -->
 
 <div class="celebration-layer" id="celebrationLayer" aria-hidden="true"></div>
@@ -161,7 +157,7 @@
 <div class="modal" id="howToModal" aria-hidden="true">
   <div class="modal-card howto-card">
     <div class="modal-head">
-      <strong>How to Play — Finish the Final 40%</strong>
+      <strong>My Coding Tasks — Finish the Final 40%</strong>
       <button class="close-btn" id="howToClose" type="button">×</button>
     </div>
     <div class="modal-body">

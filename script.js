@@ -389,6 +389,12 @@ function initializeLesson5Lab() {
   const HAPPY_CLIENT = "https://drive.google.com/thumbnail?id=1RPQ4xVgcjl-bqlYoCZcg7F9P4TxITBsy&sz=w2000";
   const SAD_CLIENT = "https://drive.google.com/thumbnail?id=1R0BarmaMp84QT2F3f6SIGKcM08FuBsTD&sz=w2000";
 
+  const feedbackBtn = document.getElementById("feedbackBtn");
+  const feedbackCount = document.getElementById("feedbackCount");
+  const feedbackToast = document.getElementById("feedbackToast");
+  let feedbackHistory = [];
+  let feedbackToastTimer = null;
+  let lastCompletedJobs = new Set();
   let reactionTimer = null;
   let reactionSeen = new Set();
   let starterColorDeclarations = new Set();
@@ -422,17 +428,34 @@ function initializeLesson5Lab() {
   }
 
   function showClientReaction(type, title, message, allowBoard=false){
-    reactionModal.classList.remove("happy","concern","open");
-    reactionImage.src = type === "happy" ? HAPPY_CLIENT : SAD_CLIENT;
-    reactionKicker.textContent = type === "happy" ? "CLIENT REACTION" : "PURPOSE CHECK";
-    reactionTitle.textContent = title;
-    reactionMessage.textContent = message;
-    reactionBoard.classList.toggle("hidden", !allowBoard);
-    reactionModal.classList.add(type === "happy" ? "happy" : "concern");
-    reactionModal.getBoundingClientRect();
-    reactionModal.classList.add("open");
-    reactionModal.setAttribute("aria-hidden","false");
+    // Feedback is recorded without interrupting the editor. Students can
+    // review it at any time using the Client Feedback button.
+    feedbackHistory.push({type,title,message,allowBoard});
+    feedbackCount.textContent = `(${feedbackHistory.length})`;
+    feedbackToast.textContent = `${type === "happy" ? "✓ " : "💡 "}${title} — ${message}`;
+    feedbackToast.classList.add("visible");
+    clearTimeout(feedbackToastTimer);
+    feedbackToastTimer = setTimeout(()=>feedbackToast.classList.remove("visible"),5000);
   }
+
+  feedbackBtn.addEventListener("click",()=>{
+    if(!feedbackHistory.length){
+      feedbackToast.textContent = "Your client has no feedback yet. Keep coding!";
+      feedbackToast.classList.add("visible");
+      clearTimeout(feedbackToastTimer);
+      feedbackToastTimer = setTimeout(()=>feedbackToast.classList.remove("visible"),4000);
+      return;
+    }
+    const latest = feedbackHistory[feedbackHistory.length-1];
+    reactionModal.classList.remove("happy","concern","open");
+    reactionImage.src = latest.type === "happy" ? HAPPY_CLIENT : SAD_CLIENT;
+    reactionKicker.textContent = `CLIENT FEEDBACK · ${feedbackHistory.length} UPDATE${feedbackHistory.length===1?"":"S"}`;
+    reactionTitle.textContent = latest.title;
+    reactionMessage.textContent = latest.message;
+    reactionBoard.classList.toggle("hidden",!latest.allowBoard);
+    reactionModal.classList.add(latest.type === "happy" ? "happy" : "concern","open");
+    reactionModal.setAttribute("aria-hidden","false");
+  });
 
   function closeClientReaction(){
     reactionModal.classList.remove("open","happy","concern");
@@ -496,8 +519,34 @@ function initializeLesson5Lab() {
     return additions;
   }
 
+  // Approval is based on the selected client's Identity Board, not merely valid CSS.
+  function fontMatchesBoard(value, client){
+    const chosen = String(value || "").toLowerCase().replace(/["']/g, "").split(",")[0].trim();
+    return client.fonts.some(font => {
+      const family = font.stack.toLowerCase().split(",")[0].trim();
+      return chosen === family || chosen === font.name.toLowerCase() ||
+        (font.name === "Trebuchet" && chosen === "trebuchet ms");
+    });
+  }
+
+  function boardApprovedTextStyles(additions, client){
+    return Object.entries(additions).filter(([prop,value]) => {
+      if(prop === "color") return colorMatchesBoard(value,client);
+      if(prop === "font-family") return fontMatchesBoard(value,client);
+      return ["font-size","text-align","font-weight"].includes(prop);
+    });
+  }
+
+  function hasBoardIdentityStyle(additions, client){
+    return Object.entries(additions).some(([prop,value]) =>
+      (prop === "color" && colorMatchesBoard(value,client)) ||
+      (prop === "font-family" && fontMatchesBoard(value,client))
+    );
+  }
+
   function getJobCompletion(source){
     const jobs = [false,false,false,false,false];
+    const client = clients[activeKey];
 
     // Job 1: create a header div and place the client-approved header1.png inside it.
     const headerDiv = source.match(/<div\b[^>]*>\s*<img\b[^>]*\bsrc\s*=\s*["']header1\.png["'][^>]*>\s*<\/div>/i);
@@ -509,7 +558,7 @@ function initializeLesson5Lab() {
 
     // Job 2: at least 2 NEW text-focused h1 declarations.
     const h1Adds = newValidDeclarations("h1",source);
-    jobs[1] = Object.keys(h1Adds).filter(prop => textStyleProperties.has(prop)).length >= 2;
+    jobs[1] = boardApprovedTextStyles(h1Adds,client).length >= 2 && hasBoardIdentityStyle(h1Adds,client);
 
     // Job 3: add background-color inline to the existing featured-content div.
     // This reinforces why inline styling is useful when only ONE div should change.
@@ -518,7 +567,8 @@ function initializeLesson5Lab() {
       const attrs = match[1] || "";
       const styleMatch = attrs.match(/style\s*=\s*["']([^"']*)["']/i);
       if(!styleMatch) return false;
-      return /(?:^|;)\s*background-color\s*:\s*[^;]+\s*;/i.test(styleMatch[1] + (styleMatch[1].trim().endsWith(";") ? "" : ";"));
+      const color = styleMatch[1].match(/(?:^|;)\s*background-color\s*:\s*([^;]+)\s*(?:;|$)/i);
+      return Boolean(color && colorMatchesBoard(color[1],client));
     });
 
     // Job 4: button must gain background-color AND one additional valid style.
@@ -526,13 +576,13 @@ function initializeLesson5Lab() {
     const buttonExtra = Object.keys(buttonAdds).filter(prop =>
       prop !== "background-color" && textStyleProperties.has(prop)
     );
-    jobs[3] = Boolean(buttonAdds["background-color"]) && buttonExtra.length >= 1;
+    jobs[3] = Boolean(buttonAdds["background-color"] && colorMatchesBoard(buttonAdds["background-color"],client)) && boardApprovedTextStyles(Object.fromEntries(buttonExtra.map(prop => [prop,buttonAdds[prop]])),client).length >= 1;
 
     // Job 5: at least 2 NEW text-focused h2 declarations.
     // background-color intentionally does NOT count here because it creates
     // a long isolated color bar behind the heading.
     const h2Adds = newValidDeclarations("h2",source);
-    jobs[4] = Object.keys(h2Adds).filter(prop => textStyleProperties.has(prop)).length >= 2;
+    jobs[4] = boardApprovedTextStyles(h2Adds,client).length >= 2 && hasBoardIdentityStyle(h2Adds,client);
 
     return jobs;
   }
@@ -590,15 +640,12 @@ function initializeLesson5Lab() {
 
     if(percent < 100){
       progressMessage.textContent = completeCount === 0
-        ? "The previous developer completed 60%. Finish the final five jobs."
-        : `${completeCount} of 5 jobs finished. Keep going — you're getting close.`;
+        ? "Complete 5 coding tasks to reach 100%."
+        : `${completeCount} of 5 tasks complete. Keep going!`;
     }else{
       progressMessage.textContent = "All five jobs complete. Your client project is ready!";
     }
 
-    jobStatusGrid.querySelectorAll(".job-status").forEach((el,index)=>{
-      el.classList.toggle("complete", jobs[index]);
-    });
 
     if(percent === 100 && !completionShown){
       completionShown = true;
@@ -636,7 +683,34 @@ function initializeLesson5Lab() {
     const syntaxErrors = getSyntaxErrorLines(source);
     if(syntaxErrors.size > 0) return;
 
+    const completed = getJobCompletion(source);
+    const newMilestones = completed.some((done,i)=>done && !lastCompletedJobs.has(i));
+    completed.forEach((done,i)=>{if(done) lastCompletedJobs.add(i);});
     const client = clients[activeKey];
+    if(!newMilestones){
+      const additions = ["h1","h2","button"].flatMap(selector =>
+        Object.entries(newValidDeclarations(selector,source)).map(([prop,value]) => ({selector,prop,value}))
+      );
+      const inlineStyles = [...source.matchAll(/<div\b[^>]*style\s*=\s*["']([^"']*)["'][^>]*>/gi)];
+      const invalidColor = additions.find(item =>
+        ["color","background-color"].includes(item.prop) && !colorMatchesBoard(item.value,client)
+      ) || inlineStyles.map(match => {
+        const color = match[1].match(/(?:^|;)\s*background-color\s*:\s*([^;]+)\s*(?:;|$)/i);
+        return color ? {selector:"featured div",prop:"background-color",value:color[1].trim()} : null;
+      }).find(item => item && !colorMatchesBoard(item.value,client));
+      const invalidFont = additions.find(item => item.prop === "font-family" && !fontMatchesBoard(item.value,client));
+      const invalid = invalidColor || invalidFont;
+      if(invalid){
+        const key = `board-mismatch:${invalid.selector}:${invalid.prop}:${invalid.value.toLowerCase()}`;
+        if(!reactionSeen.has(key)){
+          reactionSeen.add(key);
+          showClientReaction("concern","Check the Identity Board",
+            `Your ${invalid.selector} uses ${invalid.prop}: ${invalid.value}, which does not match this client's approved ${invalid.prop === "font-family" ? "fonts" : "colors"}. Update it to earn task credit.`,true);
+        }
+      }
+      return;
+    }
+
 
     // A background on h2 creates a long isolated rectangle in these layouts.
     // The code is valid, but it is intentionally treated as a design-purpose check.
@@ -712,7 +786,7 @@ function initializeLesson5Lab() {
         showClientReaction(
           "concern",
           "Does that color fit our purpose?",
-          "That color is outside the Company's Identity Board. You can keep it if you have a strong business reason, or check the board again before deciding.",
+          "That color is not on the Company Identity Board, so the task cannot be approved. Choose one of the client's listed colors and try again.",
           true
         );
       }
@@ -724,6 +798,10 @@ function initializeLesson5Lab() {
     activeKey = key;
     clearTimeout(reactionTimer);
     reactionSeen = new Set();
+    feedbackHistory = [];
+    feedbackCount.textContent = "";
+    lastCompletedJobs = new Set();
+    feedbackToast.classList.remove("visible");
     const client = clients[key];
     starterColorDeclarations = new Set(
       extractColorDeclarations(client.starter).map(item => item.full)
@@ -826,7 +904,7 @@ function initializeLesson5Lab() {
             const t = decl.replace(/\/\*.*?\*\//g,"").trim();
             if(!t) return;
             if(!t.includes(":")){
-              errors.add(cssRuleStart + offset + 1);
+              errors.add(cssRuleStart + offset);
               return;
             }
             const colon = t.indexOf(":");
@@ -834,7 +912,7 @@ function initializeLesson5Lab() {
             const value = t.slice(colon+1).replace(/;+\s*$/,"").trim();
 
             if(!prop || !value || !CSS.supports(prop,value)){
-              errors.add(cssRuleStart + offset + 1);
+              errors.add(cssRuleStart + offset);
             }
           });
 
@@ -1035,6 +1113,24 @@ function initializeLesson5Lab() {
     return `<span class="tok-text">${safe}</span>`;
   }
 
+  function syncEditorMirror(){
+    // A native textarea loses usable text width when a vertical scrollbar
+    // appears. Match that viewport in the highlighted mirror as well.
+    const verticalBar = Math.max(0, codeEditor.offsetWidth - codeEditor.clientWidth - codeEditor.clientLeft * 2);
+    const horizontalBar = Math.max(0, codeEditor.offsetHeight - codeEditor.clientHeight - codeEditor.clientTop * 2);
+    syntaxLayer.style.setProperty("--editor-scrollbar-width", `${verticalBar}px`);
+    syntaxLayer.style.setProperty("--editor-horizontal-scrollbar-height", `${horizontalBar}px`);
+    syntaxLayer.scrollTop = codeEditor.scrollTop;
+    syntaxLayer.scrollLeft = codeEditor.scrollLeft;
+    lineNumbers.scrollTop = codeEditor.scrollTop;
+  }
+
+  if(typeof ResizeObserver !== "undefined"){
+    const editorResizeObserver = new ResizeObserver(syncEditorMirror);
+    editorResizeObserver.observe(codeEditor);
+  }
+  window.addEventListener("resize", syncEditorMirror);
+
   function updateSyntaxLayer(){
     const source = codeEditor.value;
     const errorLines = getSyntaxErrorLines(source);
@@ -1063,8 +1159,7 @@ function initializeLesson5Lab() {
     }).join("\n");
 
     syntaxLayer.innerHTML = rendered + "\n";
-    syntaxLayer.scrollTop = codeEditor.scrollTop;
-    syntaxLayer.scrollLeft = codeEditor.scrollLeft;
+    syncEditorMirror();
   }
 
   function updateLineNumbers(){
@@ -1421,11 +1516,7 @@ function initializeLesson5Lab() {
     },550);
   });
 
-  codeEditor.addEventListener("scroll",()=>{
-    lineNumbers.scrollTop = codeEditor.scrollTop;
-    syntaxLayer.scrollTop = codeEditor.scrollTop;
-    syntaxLayer.scrollLeft = codeEditor.scrollLeft;
-  });
+  codeEditor.addEventListener("scroll",syncEditorMirror);
 
   codeEditor.addEventListener("keydown",(event)=>{
     if(event.key === "Tab"){
@@ -1452,8 +1543,11 @@ function initializeLesson5Lab() {
     document.body.classList.toggle("dark-mode", enabled);
     darkModeToggle.classList.toggle("on", enabled);
     darkModeToggle.setAttribute("aria-pressed", enabled ? "true" : "false");
-    darkModeState.textContent = enabled ? "On" : "Off";
+    darkModeState.textContent = enabled ? "Dark" : "Light";
+    darkModeToggle.setAttribute("aria-label", enabled ? "Switch to light mode" : "Switch to dark mode");
   }
+
+  setDarkMode(true);
 
   darkModeToggle.addEventListener("click",()=>{
     setDarkMode(!document.body.classList.contains("dark-mode"));
@@ -1550,6 +1644,10 @@ function initializeLesson5Lab() {
     if(!activeKey) return;
     clearTimeout(reactionTimer);
     reactionSeen = new Set();
+    feedbackHistory = [];
+    feedbackCount.textContent = "";
+    lastCompletedJobs = new Set();
+    feedbackToast.classList.remove("visible");
     completionShown = false;
     celebrationLayer.classList.remove("active");
     celebrationLayer.innerHTML = "";

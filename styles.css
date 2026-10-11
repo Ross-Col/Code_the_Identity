@@ -556,6 +556,9 @@ button{cursor:pointer}
   tab-size:2;
   font:13px/20px Consolas,"Courier New",monospace;
   white-space:pre;
+  overflow-wrap:normal;
+  overflow-x:auto;
+  overflow-y:auto;
 }
 .code-editor::selection{
   background:rgba(38,121,190,.45);
@@ -1145,3 +1148,36 @@ body.dark-mode .reaction-btn.secondary{background:#25313D;color:#DCE5EE;border-c
   .editor-panel{min-height:650px}
   .workspace{min-height:auto}
 }
+/* Student-first workspace updates */
+.feedback-toast{position:fixed;right:22px;bottom:22px;z-index:1500;max-width:min(390px,calc(100vw - 44px));background:#16382b;color:#fff;padding:14px 18px;border-radius:12px;box-shadow:0 12px 32px #0004;font-size:.88rem;line-height:1.45;opacity:0;transform:translateY(14px);pointer-events:none;transition:opacity .2s,transform .2s}
+.feedback-toast.visible{opacity:1;transform:translateY(0)}
+.action-feedback{background:#eef7f0;color:#20513a;border:1px solid #b9d9c3}
+.editor-title-actions{gap:8px}
+@media(max-width:700px){.feedback-toast{right:12px;bottom:12px}}
+
+/* Keep the real textarea and highlighted mirror on identical text metrics.
+   The mirror must have its own scrollable content box so scrollTop/Left
+   actually follow the native editor, even after viewport resizing. */
+.code-stack .syntax-layer,
+.code-stack .code-editor{
+  font-family:Consolas,"Courier New",monospace;
+  font-size:13px;
+  font-weight:400;
+  line-height:20px;
+  letter-spacing:normal;
+  padding:12px 14px 40px;
+  tab-size:2;
+  white-space:pre;
+  overflow-wrap:normal;
+  word-break:normal;
+  text-align:left;
+}
+.code-stack .syntax-layer{
+  overflow:scroll;
+  scrollbar-width:none;
+  scrollbar-color:transparent transparent;
+  right:var(--editor-scrollbar-width, 0px);
+  bottom:var(--editor-horizontal-scrollbar-height, 0px);
+}
+.code-stack .syntax-layer::-webkit-scrollbar{width:0;height:0;display:none}
+.code-stack .code-editor{wrap-option:nowrap}
