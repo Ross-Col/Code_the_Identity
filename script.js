@@ -544,45 +544,64 @@ function initializeLesson5Lab() {
     );
   }
 
+  // A new CSS declaration earns credit when it is valid. Brand-sensitive
+  // choices (colors and fonts) must also match the selected Identity Board.
+  function approvedNewStyles(additions, client, excluded=[]){
+    return Object.entries(additions).filter(([prop,value]) => {
+      if(excluded.includes(prop)) return false;
+      if(prop === "color" || prop === "background-color") return colorMatchesBoard(value,client);
+      if(prop === "font-family") return fontMatchesBoard(value,client);
+      return CSS.supports(prop,value);
+    });
+  }
+
+  function hasUnapprovedBrandStyle(additions,client){
+    return Object.entries(additions).some(([prop,value]) =>
+      ((prop === "color" || prop === "background-color") && !colorMatchesBoard(value,client)) ||
+      (prop === "font-family" && !fontMatchesBoard(value,client))
+    );
+  }
+
   function getJobCompletion(source){
     const jobs = [false,false,false,false,false];
     const client = clients[activeKey];
+    if(!client) return jobs;
 
-    // Job 1: create a header div and place the client-approved header1.png inside it.
-    const headerDiv = source.match(/<div\b[^>]*>\s*<img\b[^>]*\bsrc\s*=\s*["']header1\.png["'][^>]*>\s*<\/div>/i);
-    jobs[0] = Boolean(headerDiv);
+    // Job 1: client-approved header image.
+    jobs[0] = /<div\b[^>]*>\s*<img\b[^>]*\bsrc\s*=\s*["']header1\.png["'][^>]*>\s*<\/div>/i.test(source);
 
-    const textStyleProperties = new Set([
-      "color","font-size","font-family","text-align","font-weight"
-    ]);
-
-    // Job 2: at least 2 NEW text-focused h1 declarations.
+    // Jobs 2 and 5: two NEW valid styles. The starter already contains a
+    // brand-approved h1 font, so don't require students to add it a second time.
+    // However, any new color/font must still be approved by the board.
     const h1Adds = newValidDeclarations("h1",source);
-    jobs[1] = boardApprovedTextStyles(h1Adds,client).length >= 2 && hasBoardIdentityStyle(h1Adds,client);
+    jobs[1] = !hasUnapprovedBrandStyle(h1Adds,client) &&
+      approvedNewStyles(h1Adds,client).length >= 2;
 
-    // Job 3: add background-color inline to the existing featured-content div.
-    // This reinforces why inline styling is useful when only ONE div should change.
-    const inlineDivMatches = [...source.matchAll(/<div\b([^>]*)>/gi)];
-    jobs[2] = inlineDivMatches.some(match => {
-      const attrs = match[1] || "";
-      const styleMatch = attrs.match(/style\s*=\s*["']([^"']*)["']/i);
-      if(!styleMatch) return false;
-      const color = styleMatch[1].match(/(?:^|;)\s*background-color\s*:\s*([^;]+)\s*(?:;|$)/i);
-      return Boolean(color && colorMatchesBoard(color[1],client));
-    });
+    // Job 3: accept the featured div's background-color, whether the student
+    // follows the starter CSS div rule or uses an inline style on that div.
+    const divAdds = newValidDeclarations("div",source);
+    const cssFeaturedColor = divAdds["background-color"];
+    const inlineFeaturedColor = [...source.matchAll(/<div\b([^>]*)>([\s\S]*?)<\/div>/gi)]
+      .filter(match => /<p\b/i.test(match[2]))
+      .map(match => {
+        const style = match[1].match(/\bstyle\s*=\s*["']([^"']*)["']/i);
+        if(!style) return null;
+        const decl = style[1].match(/(?:^|;)\s*background-color\s*:\s*([^;]+)\s*(?:;|$)/i);
+        return decl ? decl[1].trim() : null;
+      }).filter(Boolean);
+    jobs[2] = Boolean((cssFeaturedColor && colorMatchesBoard(cssFeaturedColor,client)) ||
+      inlineFeaturedColor.some(color => colorMatchesBoard(color,client)));
 
-    // Job 4: button must gain background-color AND one additional valid style.
+    // Job 4: approved background and ANY other valid new CSS declaration.
     const buttonAdds = newValidDeclarations("button",source);
-    const buttonExtra = Object.keys(buttonAdds).filter(prop =>
-      prop !== "background-color" && textStyleProperties.has(prop)
-    );
-    jobs[3] = Boolean(buttonAdds["background-color"] && colorMatchesBoard(buttonAdds["background-color"],client)) && boardApprovedTextStyles(Object.fromEntries(buttonExtra.map(prop => [prop,buttonAdds[prop]])),client).length >= 1;
+    jobs[3] = Boolean(buttonAdds["background-color"] &&
+      colorMatchesBoard(buttonAdds["background-color"],client) &&
+      !hasUnapprovedBrandStyle(buttonAdds,client) &&
+      approvedNewStyles(buttonAdds,client,["background-color"]).length >= 1);
 
-    // Job 5: at least 2 NEW text-focused h2 declarations.
-    // background-color intentionally does NOT count here because it creates
-    // a long isolated color bar behind the heading.
     const h2Adds = newValidDeclarations("h2",source);
-    jobs[4] = boardApprovedTextStyles(h2Adds,client).length >= 2 && hasBoardIdentityStyle(h2Adds,client);
+    jobs[4] = !hasUnapprovedBrandStyle(h2Adds,client) &&
+      approvedNewStyles(h2Adds,client,["background-color"]).length >= 2;
 
     return jobs;
   }
@@ -627,10 +646,9 @@ function initializeLesson5Lab() {
   function updateProgress(source){
     if(!activeKey) return;
 
-    // Keep the last valid progress state while a student is in the middle
-    // of typing an incomplete tag/rule.
-    if(getSyntaxErrorLines(source).size > 0) return;
-
+    // Always re-check the current code. An earlier off-brand value must not
+    // freeze the progress bar after the student fixes that declaration.
+    // Syntax highlighting remains independent of task completion.
     const jobs = getJobCompletion(source);
     const completeCount = jobs.filter(Boolean).length;
     const percent = 60 + completeCount * 8;
@@ -1497,6 +1515,9 @@ function initializeLesson5Lab() {
 
       updateLineNumbers();
       schedulePreview();
+      // setRangeText does not fire a native input event. Recalculate
+      // task completion immediately for pasted HEX colors and filenames.
+      updateProgress(codeEditor.value);
 
       clearTimeout(reactionTimer);
       reactionTimer = setTimeout(()=>{
